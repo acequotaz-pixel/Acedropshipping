@@ -1,0 +1,688 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Package, 
+  ShoppingCart, 
+  Users, 
+  DollarSign, 
+  TrendingUp, 
+  Plus,
+  Search,
+  Filter,
+  Eye,
+  Edit,
+  Trash2,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  Truck,
+  Star,
+  Phone,
+  Mail,
+  MapPin
+} from 'lucide-react';
+
+const DropshippingApp = () => {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [products, setProducts] = useState([
+    {
+      id: 1,
+      name: 'Wireless Bluetooth Headphones',
+      sku: 'WBH-001',
+      price: 89.99,
+      cost: 45.00,
+      stock: 25,
+      supplier: 'TechSupply Co.',
+      image: '/api/placeholder/200/200',
+      status: 'active',
+      description: 'High-quality wireless headphones with noise cancellation',
+      category: 'Electronics'
+    },
+    {
+      id: 2,
+      name: 'Fitness Tracker Watch',
+      sku: 'FTW-002',
+      price: 149.99,
+      cost: 78.00,
+      stock: 15,
+      supplier: 'HealthTech Ltd.',
+      image: '/api/placeholder/200/200',
+      status: 'active',
+      description: 'Advanced fitness tracker with heart rate monitoring',
+      category: 'Health & Fitness'
+    },
+    {
+      id: 3,
+      name: 'Eco-Friendly Water Bottle',
+      sku: 'EWB-003',
+      price: 24.99,
+      cost: 12.50,
+      stock: 50,
+      supplier: 'GreenWare Inc.',
+      image: '/api/placeholder/200/200',
+      status: 'active',
+      description: 'Sustainable stainless steel water bottle',
+      category: 'Home & Garden'
+    }
+  ]);
+
+  const [orders, setOrders] = useState([
+    {
+      id: 1001,
+      customerName: 'John Smith',
+      email: 'john@email.com',
+      products: [
+        { id: 1, name: 'Wireless Bluetooth Headphones', quantity: 1, price: 89.99 }
+      ],
+      total: 89.99,
+      status: 'pending',
+      date: '2024-06-15',
+      shippingAddress: '123 Main St, City, State 12345'
+    },
+    {
+      id: 1002,
+      customerName: 'Sarah Johnson',
+      email: 'sarah@email.com',
+      products: [
+        { id: 2, name: 'Fitness Tracker Watch', quantity: 2, price: 149.99 }
+      ],
+      total: 299.98,
+      status: 'processing',
+      date: '2024-06-14',
+      shippingAddress: '456 Oak Ave, Town, State 67890'
+    },
+    {
+      id: 1003,
+      customerName: 'Mike Wilson',
+      email: 'mike@email.com',
+      products: [
+        { id: 3, name: 'Eco-Friendly Water Bottle', quantity: 3, price: 24.99 }
+      ],
+      total: 74.97,
+      status: 'shipped',
+      date: '2024-06-13',
+      shippingAddress: '789 Pine Rd, Village, State 54321'
+    }
+  ]);
+
+  const [suppliers, setSuppliers] = useState([
+    {
+      id: 1,
+      name: 'TechSupply Co.',
+      contact: 'tech@supplier.com',
+      phone: '+1-555-0123',
+      rating: 4.8,
+      productsCount: 156,
+      location: 'California, USA'
+    },
+    {
+      id: 2,
+      name: 'HealthTech Ltd.',
+      contact: 'health@supplier.com',
+      phone: '+1-555-0456',
+      rating: 4.6,
+      productsCount: 89,
+      location: 'Texas, USA'
+    },
+    {
+      id: 3,
+      name: 'GreenWare Inc.',
+      contact: 'green@supplier.com',
+      phone: '+1-555-0789',
+      rating: 4.9,
+      productsCount: 203,
+      location: 'Oregon, USA'
+    }
+  ]);
+
+  const [showAddProduct, setShowAddProduct] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    sku: '',
+    price: '',
+    cost: '',
+    stock: '',
+    supplier: '',
+    description: '',
+    category: ''
+  });
+
+  const handleAddProduct = () => {
+    if (newProduct.name && newProduct.price && newProduct.cost) {
+      const product = {
+        id: Date.now(),
+        ...newProduct,
+        price: parseFloat(newProduct.price),
+        cost: parseFloat(newProduct.cost),
+        stock: parseInt(newProduct.stock) || 0,
+        status: 'active',
+        image: '/api/placeholder/200/200'
+      };
+      setProducts([...products, product]);
+      setNewProduct({
+        name: '',
+        sku: '',
+        price: '',
+        cost: '',
+        stock: '',
+        supplier: '',
+        description: '',
+        category: ''
+      });
+      setShowAddProduct(false);
+    }
+  };
+
+  const updateOrderStatus = (orderId, newStatus) => {
+    setOrders(orders.map(order => 
+      order.id === orderId ? { ...order, status: newStatus } : order
+    ));
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return 'text-yellow-600 bg-yellow-100';
+      case 'processing': return 'text-blue-600 bg-blue-100';
+      case 'shipped': return 'text-green-600 bg-green-100';
+      case 'delivered': return 'text-purple-600 bg-purple-100';
+      case 'cancelled': return 'text-red-600 bg-red-100';
+      default: return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'pending': return <Clock className="w-4 h-4" />;
+      case 'processing': return <AlertCircle className="w-4 h-4" />;
+      case 'shipped': return <Truck className="w-4 h-4" />;
+      case 'delivered': return <CheckCircle className="w-4 h-4" />;
+      default: return <Clock className="w-4 h-4" />;
+    }
+  };
+
+  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+  const totalOrders = orders.length;
+  const pendingOrders = orders.filter(order => order.status === 'pending').length;
+  const totalProducts = products.length;
+
+  const renderDashboard = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Revenue</p>
+              <p className="text-2xl font-bold text-green-600">${totalRevenue.toFixed(2)}</p>
+            </div>
+            <DollarSign className="w-8 h-8 text-green-600" />
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Orders</p>
+              <p className="text-2xl font-bold text-blue-600">{totalOrders}</p>
+            </div>
+            <ShoppingCart className="w-8 h-8 text-blue-600" />
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Pending Orders</p>
+              <p className="text-2xl font-bold text-yellow-600">{pendingOrders}</p>
+            </div>
+            <Clock className="w-8 h-8 text-yellow-600" />
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Products</p>
+              <p className="text-2xl font-bold text-purple-600">{totalProducts}</p>
+            </div>
+            <Package className="w-8 h-8 text-purple-600" />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4">Recent Orders</h3>
+          <div className="space-y-3">
+            {orders.slice(0, 5).map(order => (
+              <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div>
+                  <p className="font-medium">#{order.id}</p>
+                  <p className="text-sm text-gray-600">{order.customerName}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-medium">${order.total.toFixed(2)}</p>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                    {getStatusIcon(order.status)}
+                    <span className="ml-1 capitalize">{order.status}</span>
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4">Top Products</h3>
+          <div className="space-y-3">
+            {products.slice(0, 5).map(product => (
+              <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gray-200 rounded"></div>
+                  <div>
+                    <p className="font-medium">{product.name}</p>
+                    <p className="text-sm text-gray-600">Stock: {product.stock}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-medium">${product.price}</p>
+                  <p className="text-sm text-gray-600">Profit: ${(product.price - product.cost).toFixed(2)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderProducts = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Products</h2>
+        <button
+          onClick={() => setShowAddProduct(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Add Product</span>
+        </button>
+      </div>
+
+      {showAddProduct && (
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4">Add New Product</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="Product Name"
+              value={newProduct.name}
+              onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+              className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              placeholder="SKU"
+              value={newProduct.sku}
+              onChange={(e) => setNewProduct({...newProduct, sku: e.target.value})}
+              className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="number"
+              placeholder="Price"
+              value={newProduct.price}
+              onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
+              className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="number"
+              placeholder="Cost"
+              value={newProduct.cost}
+              onChange={(e) => setNewProduct({...newProduct, cost: e.target.value})}
+              className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="number"
+              placeholder="Stock"
+              value={newProduct.stock}
+              onChange={(e) => setNewProduct({...newProduct, stock: e.target.value})}
+              className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              placeholder="Supplier"
+              value={newProduct.supplier}
+              onChange={(e) => setNewProduct({...newProduct, supplier: e.target.value})}
+              className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              placeholder="Category"
+              value={newProduct.category}
+              onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
+              className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <textarea
+              placeholder="Description"
+              value={newProduct.description}
+              onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
+              className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="flex space-x-2 mt-4">
+            <button
+              onClick={handleAddProduct}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+            >
+              Add Product
+            </button>
+            <button
+              onClick={() => setShowAddProduct(false)}
+              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Profit</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {products.map(product => (
+                <tr key={product.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-gray-200 rounded mr-3"></div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                        <div className="text-sm text-gray-500">{product.category}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{product.sku}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.price}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.cost}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">${(product.price - product.cost).toFixed(2)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{product.stock}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{product.supplier}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-2">
+                      <button className="text-blue-600 hover:text-blue-900">
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button className="text-green-600 hover:text-green-900">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button className="text-red-600 hover:text-red-900">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderOrders = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Orders</h2>
+        <div className="flex space-x-2">
+          <button className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 flex items-center space-x-2">
+            <Search className="w-4 h-4" />
+            <span>Search</span>
+          </button>
+          <button className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 flex items-center space-x-2">
+            <Filter className="w-4 h-4" />
+            <span>Filter</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Products</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {orders.map(order => (
+                <tr key={order.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{order.id}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{order.customerName}</div>
+                      <div className="text-sm text-gray-500">{order.email}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {order.products.map(product => (
+                      <div key={product.id}>
+                        {product.name} × {product.quantity}
+                      </div>
+                    ))}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${order.total.toFixed(2)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <select
+                      value={order.status}
+                      onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border-0 ${getStatusColor(order.status)}`}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="processing">Processing</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="delivered">Delivered</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.date}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-2">
+                      <button className="text-blue-600 hover:text-blue-900">
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button className="text-green-600 hover:text-green-900">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSuppliers = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Suppliers</h2>
+        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2">
+          <Plus className="w-4 h-4" />
+          <span>Add Supplier</span>
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {suppliers.map(supplier => (
+          <div key={supplier.id} className="bg-white p-6 rounded-lg shadow-md">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">{supplier.name}</h3>
+              <div className="flex items-center space-x-1">
+                <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                <span className="text-sm text-gray-600">{supplier.rating}</span>
+              </div>
+            </div>
+            
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <Mail className="w-4 h-4" />
+                <span>{supplier.contact}</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <Phone className="w-4 h-4" />
+                <span>{supplier.phone}</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <MapPin className="w-4 h-4" />
+                <span>{supplier.location}</span>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Products</p>
+                <p className="text-lg font-semibold">{supplier.productsCount}</p>
+              </div>
+              <div className="flex space-x-2">
+                <button className="text-blue-600 hover:text-blue-900">
+                  <Eye className="w-4 h-4" />
+                </button>
+                <button className="text-green-600 hover:text-green-900">
+                  <Edit className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return renderDashboard();
+      case 'products':
+        return renderProducts();
+      case 'orders':
+        return renderOrders();
+      case 'suppliers':
+        return renderSuppliers();
+      default:
+        return renderDashboard();
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-2">
+              <Package className="w-8 h-8 text-blue-600" />
+              <h1 className="text-xl font-bold text-gray-900">DropShip Pro</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium">
+                A
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex">
+          {/* Sidebar */}
+          <div className="w-64 bg-white rounded-lg shadow-sm p-6 mr-8">
+            <nav className="space-y-2">
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left ${
+                  activeTab === 'dashboard' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <TrendingUp className="w-4 h-4" />
+                <span>Dashboard</span>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('products')}
+                className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left ${
+                  activeTab === 'products' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Package className="w-4 h-4" />
+                <span>Products</span>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('orders')}
+                className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left ${
+                  activeTab === 'orders' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <ShoppingCart className="w-4 h-4" />
+                <span>Orders</span>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('suppliers')}
+                className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left ${
+                  activeTab === 'suppliers' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                <span>Suppliers</span>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left ${
+                  activeTab === 'analytics' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <TrendingUp className="w-4 h-4" />
+                <span>Analytics</span>
+              </button>
+            </nav>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1">
+            {renderContent()}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DropshippingApp;
